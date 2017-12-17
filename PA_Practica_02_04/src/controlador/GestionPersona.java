@@ -107,7 +107,7 @@ public class GestionPersona {
         return archivo.length();
     }
 
-    public void biscaRegistro(int reg) {
+    public void buscaRegistro(int reg) {
 
     }
 
