@@ -23,6 +23,8 @@ public class Interfaz extends JFrame implements ActionListener {
     private JTextField txtFechaNac;
     private JLabel lbTamanio;
     private JTable tblAutos;
+    private boolean editar;
+    private String dato;
 
     private GestionPersona gp;
 
@@ -32,6 +34,8 @@ public class Interfaz extends JFrame implements ActionListener {
         setSize(500, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         getContentPane().setLayout(new GridLayout(2, 2));
+
+        editar = false;
 
         JButton boton1 = new JButton("Guardar");
         boton1.addActionListener(this);
@@ -174,20 +178,40 @@ public class Interfaz extends JFrame implements ActionListener {
 
     public void btnGuardarPanel2() {
         gp = new GestionPersona("src/archivos/personas.dat");
-        try {
-            if (txtCedula.getText().equals("") || txtNombre.getText().equals("") || txtFechaNac.getText().equals("") || txtFechaNac.getText().equals("00/00/0000")) {
-                throw new Exception("Debe llenar todos los campos.");
+        if (editar) {
+            int opcion = JOptionPane.showConfirmDialog(this,
+                    "Seguro desea remplazar? ", "Confirmar",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE);
+            if (opcion == JOptionPane.YES_OPTION) {
+                try {
+                    gp.editarRegistro(Integer.parseInt(dato), txtCedula.getText(), txtNombre.getText(), txtDireccion.getText(), txtFechaNac.getText());
+                    JOptionPane.showMessageDialog(this, "Dato sobre escrito",
+                            "MSJ", JOptionPane.INFORMATION_MESSAGE);
+                    tamanioArchivo();
+                    tblAutos.setModel(new ModelPersona(gp.listarPersona()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-            gp.validarCedula(txtCedula.getText());
-            gp.validaFechaNac(txtFechaNac.getText());
+            editar = false;
+        }
+        else {
+            try {
+                if (txtCedula.getText().equals("") || txtNombre.getText().equals("") || txtFechaNac.getText().equals("") || txtFechaNac.getText().equals("00/00/0000")) {
+                    throw new Exception("Debe llenar todos los campos.");
+                }
+                gp.validarCedula(txtCedula.getText());
+                gp.validaFechaNac(txtFechaNac.getText());
 
-            gp.agregarPersona(txtCedula.getText(), txtNombre.getText(), txtDireccion.getText(), txtFechaNac.getText());
-            tamanioArchivo();
-            JOptionPane.showMessageDialog(this, "Datos guardados", "Mensaje de información", JOptionPane.INFORMATION_MESSAGE);
-            tblAutos.setModel(new ModelPersona(gp.listarPersona()));
+                gp.agregarPersona(txtCedula.getText(), txtNombre.getText(), txtDireccion.getText(), txtFechaNac.getText());
+                tamanioArchivo();
+                JOptionPane.showMessageDialog(this, "Datos guardados", "Mensaje de información", JOptionPane.INFORMATION_MESSAGE);
+                tblAutos.setModel(new ModelPersona(gp.listarPersona()));
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -202,15 +226,23 @@ public class Interfaz extends JFrame implements ActionListener {
     private void btnBuscarReg() {
         gp = new GestionPersona("src/archivos/personas.dat");
 
-        String dato = JOptionPane.showInputDialog(this, "Inserte el numero de registro a bsucar.");
+        dato = JOptionPane.showInputDialog(this, "Inserte el numero de registro a bsucar.");
         if (dato.equals("")) {
             JOptionPane.showMessageDialog(this, "No a ingresado ningun dato.", "Error", JOptionPane.ERROR_MESSAGE);
         }
         else {
             try {
-                int d = Integer.parseInt(dato);
+                gp.vailidaNumeros(dato);
+                Persona persona = gp.buscaRegistro(Integer.parseInt(dato));
+                txtNombre.setText(persona.getNombre());
+                txtDireccion.setText(persona.getDireccion());
+                txtCedula.setText(persona.getCedula());
+                txtFechaNac.setText(persona.getFechaNac());
+
+                editar = true;
+
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "El dato deve ser un numero.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -224,17 +256,12 @@ public class Interfaz extends JFrame implements ActionListener {
     private void btnListar() {
         gp = new GestionPersona("src/archivos/personas.dat");
         try {
-            List<Persona> lista = gp.listarPersona();
 
-            for (int i = 0; i < lista.size(); i++) {
-                Persona get = lista.get(i);
-                System.out.println("Nombr: " + get.getNombre());
-            }
-
-            //tblAutos.setModel(new ModelPersona(gp.listarPersona()));
+            tblAutos.setModel(new ModelPersona(gp.listarPersona()));
             JOptionPane.showMessageDialog(this, "Datos actualizados.",
                     "MSJ", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
